@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
@@ -11,6 +10,7 @@ namespace SkipTTS
     {
         private static readonly ManualResetEvent ExitEvent = new ManualResetEvent(false);
         private static string token;
+
 
         static void Main(string[] args)
         {

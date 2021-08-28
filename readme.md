@@ -10,7 +10,9 @@ Go to your streamelements [user page](https://streamelements.com/dashboard/accou
 
 ![Overlay Token](https://i.imgur.com/1CDI9Tf.png)
 
-Copy and paste your overlay token into a file named `token.txt` in the same folder as the program.
+Copy and paste your overlay token into a file named `token.txt` in the same folder as the program. Or supply the token via command line argument.
+
+`./SkipTTS.exe [your overlay key here]`
 
 ![Token file](https://i.imgur.com/mUkQZfJ.png)
 

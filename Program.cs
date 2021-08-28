@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
@@ -13,16 +14,20 @@ namespace SkipTTS
 
         static void Main(string[] args)
         {
-            ReadToken();
+            if (args.Length > 0)
+            {
+                token = args[0];
+            } else
+            {
+                ReadToken();
+            }
+            
             var url = new Uri("wss://realtime.streamelements.com/socket.io/?cluster=main&EIO=3&transport=websocket");
             using (var client = new WebsocketClient(url))
             {
                 client.ReconnectTimeout = TimeSpan.FromSeconds(30);
-                client.ReconnectionHappened.Subscribe(info =>
-                    Console.WriteLine($"Reconnection happened, type: {info.Type}"));
 
                 client.MessageReceived.Subscribe(msg => {
-                    Console.WriteLine($"Message received: {msg}");
                     string resp = Response(msg);
                     if(resp != null)
                     {

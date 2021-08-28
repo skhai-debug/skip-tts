@@ -1,5 +1,5 @@
 # StreamElements TTS Skipper
-A standalone program that skips StreamElements TTS donations. This program can be run in conjuction with something like [AutoHotKey](https://www.autohotkey.com/) to create a custom skip tts hotkey.
+A standalone program that skips StreamElements TTS donations. This program can be run in conjuction with something like [AutoHotKey](https://www.autohotkey.com/) to create a custom skip tts hotkey. You can look in the Sample AHK files supplied in the [samples](./samples). One uses a token file while the other uses a command line argument.
 
 ## Setup
 Download the .exe from the releases page or build yourself.

@@ -3,37 +3,70 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Websocket.Client;
+using CommandLine;
 
 namespace SkipTTS
 {
     class Program
     {
         private static readonly ManualResetEvent ExitEvent = new ManualResetEvent(false);
-        private static string token;
+        private static string token = null;
+        private static string reqResp;
+
+        public class Options
+        {
+            [Option('p', "pause", Required = false, HelpText = "Set alerts to pause.")]
+            public bool Pause { get; set; }
+            [Option('s', "skip", Required = false, HelpText = "Skip alert.")]
+            public bool Skip { get; set; }
+            [Option('r', "resume", Required = false, HelpText = "Set alerts to resume.")]
+            public bool Resume { get; set; }
+        }
 
 
         static void Main(string[] args)
         {
-            if (args.Length > 0)
+            ReadToken();
+
+            Func<ResponseMessage, string> method = null;
+
+            Parser.Default.ParseArguments<Options>(args)
+                   .WithParsed<Options>(o =>
+                   {
+                       if (o.Pause)
+                       {
+                           method = Pause;
+                           reqResp = "togglequeue";
+                       }
+                       if (o.Skip)
+                       {
+                           method = Skip;
+                           reqResp = "skip";
+                       }
+                       if (o.Resume)
+                       {
+                           method = Resume;
+                           reqResp = "togglequeue";
+                       }
+                   });
+
+            if (method == null || token == null)
             {
-                token = args[0];
-            } else
-            {
-                ReadToken();
+                Environment.Exit(-1);
             }
-            
+
             var url = new Uri("wss://realtime.streamelements.com/socket.io/?cluster=main&EIO=3&transport=websocket");
             using (var client = new WebsocketClient(url))
             {
                 client.ReconnectTimeout = TimeSpan.FromSeconds(30);
 
                 client.MessageReceived.Subscribe(msg => {
-                    string resp = Response(msg);
+                    string resp = method(msg);
                     if(resp != null)
                     {
                         Task.Run(() => {
                             client.Send(resp);
-                            if (resp.Contains("skip"))
+                            if (resp.Contains(reqResp))
                             {
                                 ExitEvent.Set();
                             }
@@ -46,9 +79,25 @@ namespace SkipTTS
                 
                 ExitEvent.WaitOne();
             }
+
+
         }
 
-        private static string Response(ResponseMessage message)
+        private static string Skip(ResponseMessage message)
+        {
+            string msg = message.Text;
+            if (msg == "40")
+            {
+                return $"42[\"authenticate\",{{ \"method\":\"apikey\",\"token\":\"{token}\" }}]";
+            }
+            else if (msg.Contains("authenticated"))
+            {
+                return "422[\"event:skip\",null]";
+            }
+            return null;
+        }
+
+        private static string Resume(ResponseMessage message)
         {
             string msg = message.Text;
             if (msg == "40")
@@ -56,10 +105,26 @@ namespace SkipTTS
                 return $"42[\"authenticate\",{{ \"method\":\"apikey\",\"token\":\"{token}\" }}]";
             } else if (msg.Contains("authenticated"))
             {
-                return "422[\"event:skip\",null]";
+                return "422[\"overlay:togglequeue\",true]";
             }
             return null;
         }
+
+        private static string Pause(ResponseMessage message)
+        {
+            string msg = message.Text;
+            if (msg == "40")
+            {
+                return $"42[\"authenticate\",{{ \"method\":\"apikey\",\"token\":\"{token}\" }}]";
+            }
+            else if (msg.Contains("authenticated"))
+            {
+                return "422[\"overlay:togglequeue\",false]";
+            }
+            return null;
+        }
+
+
 
         private static void ReadToken()
         {

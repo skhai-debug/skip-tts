@@ -21,6 +21,10 @@ namespace SkipTTS
             public bool Skip { get; set; }
             [Option('r', "resume", Required = false, HelpText = "Set alerts to resume.")]
             public bool Resume { get; set; }
+            [Option('m', "Mute", Required = false, HelpText = "Set alerts to mute.")]
+            public bool Mute { get; set; }
+            [Option('u', "unmute", Required = false, HelpText = "Set alerts to unmute.")]
+            public bool Unmute { get; set; }
         }
 
 
@@ -47,6 +51,16 @@ namespace SkipTTS
                        {
                            method = Resume;
                            reqResp = "togglequeue";
+                       }
+                       if (o.Mute)
+                       {
+                           method = Mute;
+                           reqResp = "overlay:mute";
+                       }
+                       if (o.Unmute)
+                       {
+                           method = Unmute;
+                           reqResp = "overlay:mute";
                        }
                    });
 
@@ -120,6 +134,34 @@ namespace SkipTTS
             else if (msg.Contains("authenticated"))
             {
                 return "422[\"overlay:togglequeue\",false]";
+            }
+            return null;
+        }
+                
+        private static string Mute(ResponseMessage message)
+        {
+            string msg = message.Text;
+            if (msg == "40")
+            {
+                return $"42[\"authenticate\",{{ \"method\":\"apikey\",\"token\":\"{token}\" }}]";
+            }
+            else if (msg.Contains("authenticated"))
+            {
+                return "422[\"overlay:mute\", {\"muted\":true}]";
+            }
+            return null;
+        }
+               
+        private static string Unmute(ResponseMessage message)
+        {
+            string msg = message.Text;
+            if (msg == "40")
+            {
+                return $"42[\"authenticate\",{{ \"method\":\"apikey\",\"token\":\"{token}\" }}]";
+            }
+            else if (msg.Contains("authenticated"))
+            {
+                return "422[\"overlay:mute\", {\"muted\":false}]";
             }
             return null;
         }
